@@ -17,6 +17,7 @@
 import pathlib
 import sys
 
+import numpy as np
 import pandas as pd
 import pyarrow.parquet as pq
 import toml
@@ -53,7 +54,7 @@ CELL_TYPE = "SHSY5Y"
 CONTROL_NAME = "DMSO_0.100_DMSO_0.025"
 TREATMENT_NAME = "LPS_100.000_DMSO_0.025"
 MODEL_NAME = "DMSO_0.025_vs_LPS_100"
-SHUFFLE = True
+SHUFFLE = False
 
 # %% papermill={"duration": 0.00696, "end_time": "2023-08-06T18:56:40.968861", "exception": false, "start_time": "2023-08-06T18:56:40.961901", "status": "completed"} tags=[]
 ml_configs_file = pathlib.Path("../../MLP_utils/binary_config.toml").resolve(
@@ -178,7 +179,7 @@ def test_loop(df, output_name, title):
     else:
         pass
 
-    stats, recall, precision, f1 = output_stats(
+    stats, recall, precision, f1, precision_, recall_, threshold_ = output_stats(
         y_pred_list,
         df_values_Y,
         mlp_params,
@@ -188,7 +189,16 @@ def test_loop(df, output_name, title):
         title=title,
         shuffle=mlp_params.SHUFFLE,
     )
-    return stats, recall, precision, f1, dict_of_treatments
+    return (
+        stats,
+        recall,
+        precision,
+        f1,
+        precision_,
+        recall_,
+        threshold_,
+        dict_of_treatments,
+    )
 
 
 # %% papermill={"duration": 0.284008, "end_time": "2023-08-06T18:57:37.468142", "exception": false, "start_time": "2023-08-06T18:57:37.184134", "status": "completed"} tags=[]
@@ -227,17 +237,16 @@ paired_treatment_list = [
 ]
 
 # %%
+# create a dataframe to store the model stats
 model_stats_df = pd.DataFrame(
     columns=[
-        "predictor",
-        "precision",
-        "recall",
-        "f1-score",
-        "support",
         "treatments_tested",
         "model",
         "group",
         "shuffled_data",
+        "PR_Threshold",
+        "Precision",
+        "Recall",
     ]
 )
 model_stats_df
@@ -256,27 +265,29 @@ for i in paired_treatment_list:
 
     title = f'{output_name.split("__")[0].split("_")[0]} vs {("__").join(output_name.split("__")[1].split("_")[:2])}'
     print(title)
-    stats, recall, precision, f1, dict_of_treatments = test_loop(
-        test_df, output_name, title
-    )
+    (
+        stats,
+        recall,
+        precision,
+        f1,
+        precision_,
+        recall_,
+        threshold_,
+        dict_of_treatments,
+    ) = test_loop(test_df, output_name, title)
     print(recall, precision, f1)
-    stats_df = (
-        pd.DataFrame.from_dict(stats)
-        .T.reset_index()
-        .rename(columns={"index": "predictor"})
+
+    threshold_ = np.append(threshold_, None)
+    stats_df = pd.DataFrame(
+        {
+            "PR_Threshold": threshold_,
+            "Precision": precision_,
+            "Recall": recall_,
+        }
     )
-    stats_df = stats_df.drop(stats_df.tail(3).index)
 
-    # change predictor column to int
     stats_df["treatments_tested"] = "0 vs 1"
-    stats_df
-
-    for i in dict_of_treatments:
-        print(i, dict_of_treatments[i])
-        # replace all instances of i in the df with the value in the dict
-        stats_df["predictor"] = stats_df["predictor"].replace(
-            str(i), dict_of_treatments[i]
-        )
+    # make it so that the second treatment is always the one that is being tested as the positive label
     stats_df["treatments_tested"] = stats_df["treatments_tested"].replace(
         "0 vs 1", f"{dict_of_treatments[0]} vs {dict_of_treatments[1]}"
     )
