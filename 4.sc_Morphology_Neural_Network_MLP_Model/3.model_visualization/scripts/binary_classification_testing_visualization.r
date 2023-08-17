@@ -23,7 +23,7 @@ celltype <- "SHSY5Y"
 model_name <- "DMSO_0.025_vs_LPS_100"
 
 output_file <- file.path(
-    "..","..","figures","Binary_Classification",model_name,celltype,"pr_curves.png"
+    "..","..","figures","Binary_Classification",model_name,celltype,"pr_curves_testing.png"
 )
 
 results_dir <- file.path(
@@ -68,32 +68,32 @@ pr_curve_gg <- (
     #     values = data_split_colors
     # )
 
-    # + scale_linetype_manual(
-    #     name = "Shuffled\ntraining\ndata",
-    #     labels = shuffled_labels,
-    #     values = shuffled_linetypes
-    # )
+    + scale_linetype_manual(
+        name = "Shuffled\ntraining\ndata",
+        labels = shuffled_labels,
+        values = shuffled_linetypes
+    )
 
-    # + guides(
-    #     color = guide_legend(order = 1),
-    #     linetype = guide_legend(order = 2),
-    # )
-    # + coord_fixed()
-    # + figure_theme
-    # # Decrease spacing in legend
-    # + theme(
-    #     legend.spacing.y = unit(0.1, "cm"),
-    #     legend.box.spacing = unit(0.2, "cm"),
-    #     legend.key.size = unit(0.7, "lines"),
-    #     legend.key.width = unit(1, "lines")
-    # )
+    + guides(
+        color = guide_legend(order = 1),
+        linetype = guide_legend(order = 2),
+    )
+    + coord_fixed()
+    + figure_theme
+    # Decrease spacing in legend
+    + theme(
+        legend.spacing.y = unit(0.1, "cm"),
+        legend.box.spacing = unit(0.2, "cm"),
+        legend.key.size = unit(0.7, "lines"),
+        legend.key.width = unit(1, "lines")
+    )
     # hide the legend
     + theme(
         legend.position = "none"
     )
 )
 
-# ggsave(output_file, pr_curve_gg, height = 5.5, width = 8.5, dpi = 500)
+ggsave(output_file, pr_curve_gg, height = 5.5, width = 8.5, dpi = 500)
 
 pr_curve_gg
 

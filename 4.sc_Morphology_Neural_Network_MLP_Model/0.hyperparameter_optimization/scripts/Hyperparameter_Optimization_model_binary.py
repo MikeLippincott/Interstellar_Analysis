@@ -264,7 +264,7 @@ objective_model_optimizer(
 # create graph directory for this model
 graph_path = pathlib.Path(
     f"../../figures/{mlp_params.MODEL_TYPE}/{mlp_params.MODEL_NAME}/{mlp_params.CELL_TYPE}/hyperparameter_optimization"
-).resolve(strict=True)
+)
 
 pathlib.Path(graph_path).mkdir(parents=True, exist_ok=True)
 fig = optuna.visualization.plot_optimization_history(study)
