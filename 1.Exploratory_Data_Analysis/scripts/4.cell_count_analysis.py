@@ -18,7 +18,7 @@ import seaborn as sns
 
 
 # Parameters
-celltype = "PBMC"
+celltype = "SHSY5Y"
 
 
 # In[3]:
