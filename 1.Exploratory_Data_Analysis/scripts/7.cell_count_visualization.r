@@ -13,11 +13,9 @@ args <- parse_args(parser)
 
 cell_type <- args$cell_type
 
-cell_type <- "SHSY5Y"
-
 # import path
 cell_count_path <- file.path(paste0("./results/",cell_type,"_cell_counts.parquet"))
-output_path <- file.path(paste0("./figures/cell_counts_plate2/",cell_type,"/","cell_counts.png"))
+output_path <- file.path(paste0("./Figures/cell_counts_plate2/",cell_type,"/","cell_counts.png"))
 # read in the data
 cell_count_df <- read_parquet(cell_count_path)
 
@@ -57,3 +55,7 @@ legend <- get_legend(cell_count_bar)
 cell_count_bar <- cell_count_bar + guides(fill = FALSE)
 # save the plot
 ggsave(output_path, plot = cell_count_bar, width = 12, height = 10, units = "in", dpi = 300)
+
+
+
+
