@@ -3,7 +3,7 @@ suppressWarnings(suppressPackageStartupMessages(library(platetools)))
 suppressWarnings(suppressPackageStartupMessages(library(gridExtra)))
 suppressWarnings(suppressPackageStartupMessages(library(cowplot)))
 suppressWarnings(suppressPackageStartupMessages(library(viridis)))
-suppressWarnings(suppressPackageStartupMessages(library(argparser)))
+suppressWarnings(suppressPackageStartupMessages(library(argparser)))    
 
 cell_type <- "PBMC"
 
@@ -46,9 +46,9 @@ if (!file.exists(dirname(global_prediction_trend_path))) {
 # plot the data
 global_prediction_trend_scatter <- (
     ggplot(df, aes(x=actual_value, y=predicted_value, col=shuffle))
-    + geom_point(alpha=0.5, size=0.5)
+    + geom_point(alpha=0.5, size=0.5) 
     # add geom smooth with each line being a different color
-    + labs(x="Actual", y="Predicted")
+    + labs(x="Actual", y="Predicted") 
     + theme_bw()
     + labs(title="Global Prediction Trends of Cytokine Concentrations")
     # add y=x line
@@ -61,12 +61,12 @@ ggsave(global_prediction_trend_path, global_prediction_trend_scatter, width=5, h
 global_prediction_trend_scatter
 
 global_prediction_trend_line <- (
-    ggplot(df, aes(x=actual_value, y=predicted_value, col=shuffle))
+    ggplot(df, aes(x=actual_value, y=predicted_value, col=shuffle)) 
     # add geom smooth with each line being a different color
     + geom_smooth(method="lm", se=TRUE, alpha=0.5, size=0.5, aes(col=shuffle))
     # make colors different for each line
     + scale_fill_gradientn(colours = viridis(10))
-    + labs(x="Actual", y="Predicted")
+    + labs(x="Actual", y="Predicted") 
     + theme_bw()
     + labs(title="Global Prediction Trends of Cytokine Concentrations")
     # add y=x line
@@ -79,7 +79,7 @@ ggsave(global_prediction_trend_path, global_prediction_trend_line, width=5, heig
 global_prediction_trend_line
 
 df$shuffle_plus_data_split <- paste0(df$shuffle, "_", df$data_split)
-# replace 'final_test_data' with 'Final + Test' and 'final_train_data' with 'Final + Train'
+# replace 'final_test_data' with 'Final + Test' and 'final_train_data' with 'Final + Train' 
 df$shuffle_plus_data_split <- gsub("final_test_data", "Final + Test", df$shuffle_plus_data_split)
 df$shuffle_plus_data_split <- gsub("final_train_data", "Final + Train", df$shuffle_plus_data_split)
 df$shuffle_plus_data_split <- gsub("shuffled_baseline_test_data", "Shuffled + Test", df$shuffle_plus_data_split)
@@ -89,16 +89,16 @@ enet_cp_fig <- file.path(paste0(enet_cp_fig_path,"Predicted_vs_Actual_all_cytoki
 pdf(file=enet_cp_fig)
 # set plot size
 options(repr.plot.width=6, repr.plot.height=4)
-# facet by secrete
+# facet by secrete 
 for (i in 1:length(unique(df$cytokine))){
     sub_df <- df[df$cytokine == (unique(df$cytokine)[i]),]
-# plot
+# plot 
 p <- (
     ggplot(sub_df, aes(x=actual_value, y=predicted_value, col=shuffle_plus_data_split))
-    + geom_point()
-    + theme_bw()
+    + geom_point() 
+    + theme_bw() 
     + geom_smooth(method=lm, se=TRUE, formula = y ~ x, alpha=0.5, size=0.5)
-    + labs(x="Actual", y="Predicted")
+    + labs(x="Actual", y="Predicted") 
 
     + ggtitle(unique(df$cytokine)[i])
     + ylim(0, 1)
@@ -137,7 +137,7 @@ df_var$r2 <- gsub("\\[|\\]", "", df_var$r2)
 df_var$r2 <- as.numeric(df_var$r2)
 head(df_var)
 
-# set plot size
+# set plot size 
 options(repr.plot.width=5, repr.plot.height=5)
 # set output path
 global_variance_r2_path <- file.path(paste0(enet_cp_fig_path,"global_variance_r2.png"))
@@ -148,10 +148,10 @@ if (!file.exists(dirname(global_prediction_trend_path))) {
 }
 # plot df_var df
 variance_r2_plot <- (
-    ggplot(df_var, aes(x=r2, y=actual_value,col=shuffle, shape = data_split))
-    + geom_point()
-    # + geom_smooth(method=lm, se=TRUE)
-    + labs(x="r2", y="variance")
+    ggplot(df_var, aes(x=r2, y=actual_value,col=shuffle, shape = data_split)) 
+    + geom_point() 
+    # + geom_smooth(method=lm, se=TRUE) 
+    + labs(x="r2", y="variance") 
     + theme_bw()
 )
 ggsave(global_variance_r2_path, variance_r2_plot, width=5, height=5, dpi=500)
@@ -166,17 +166,17 @@ if (!file.exists(dirname(global_prediction_trend_path))) {
 }
 # same plot but only in the positive quadrant
 variance_r2_plot <- (
-    ggplot(df_var, aes(x=r2, y=actual_value, col=shuffle, shape = data_split))
+    ggplot(df_var, aes(x=r2, y=actual_value, col=shuffle, shape = data_split)) 
     + geom_point(size=3)
-    + labs(x="R2 score", y="Explained Variance")
+    + labs(x="R2 score", y="Explained Variance") 
     + theme_bw()
     + xlim(0, max(df_var$r2))
     + ylim(0, max(df_var$actual_value))
     # change the x and y axis text size
     + theme(
-        axis.text.x = element_text(size=13),
-        axis.text.y = element_text(size=13),
-        legend.text=element_text(size=16),
+        axis.text.x = element_text(size=13), 
+        axis.text.y = element_text(size=13), 
+        legend.text=element_text(size=16), 
         axis.title=element_text(size=16),
         legend.title=element_text(size=16)
     )
@@ -208,11 +208,11 @@ options(repr.plot.width=26, repr.plot.height=10)
 # df_var_final <- df_var[df_var$shuffle == "final",]
 # set the order of the cytokines by the r2 score for the test set
 # df_var_final$cytokine <- factor(df_var_pos$cytokine, levels = df_var_pos[order(df_var_pos$r2, decreasing = TRUE),]$cytokine)
-# plot the df_var_pos df on a bar plot
+# plot the df_var_pos df on a bar plot 
 variance_r2_bar_plot <- (
-    ggplot(df_var, aes(x = reorder(cytokine, r2, decreasing=T), y=r2, fill=shuffle_data_split))
+    ggplot(df_var, aes(x = reorder(cytokine, r2, decreasing=T), y=r2, fill=shuffle_data_split)) 
     + geom_bar(stat="identity", position=position_dodge())
-    + labs(x="Shuffle", y="R2 score")
+    + labs(x="Shuffle", y="R2 score") 
     + theme_bw()
     + theme(legend.text=element_text(size=16))
     # make x ticks labels larger and rotate them 90 degrees
@@ -236,7 +236,7 @@ agg_df <- aggregate(log10_neg_mean_absolute_error ~ shuffle + data_split + cytok
 agg_df <- cbind(agg_df, agg_df$log10_neg_mean_absolute_error)
 # remove the log10_neg_mean_absolute_error column by name
 agg_df <- agg_df[, !names(agg_df) %in% c('log10_neg_mean_absolute_error')]
-# rename the columns
+# rename the columns 
 colnames(agg_df) <- c("shuffle", "data_split", "cytokine", "treatment","mean_log10_neg_mean_absolute_error", "sd_log10_neg_mean_absolute_error")
 
 
@@ -254,10 +254,10 @@ options(repr.plot.width=30, repr.plot.height=12)
 
 # plot a bar plot of the mean log10_neg_mean_absolute_error for each data split, cytokine, and shuffle with error bars
 bar_plot <- (
-    ggplot(agg_df, aes(x=cytokine, y=mean_log10_neg_mean_absolute_error, fill=cytokine))
-    + geom_bar(stat="identity", position=position_dodge())
-    + geom_errorbar(aes(ymin=mean_log10_neg_mean_absolute_error-sd_log10_neg_mean_absolute_error, ymax=mean_log10_neg_mean_absolute_error+sd_log10_neg_mean_absolute_error), width=.2, position=position_dodge(.9))
-    + labs(x="Data Split", y="log10_neg_mean_absolute_error")
+    ggplot(agg_df, aes(x=cytokine, y=mean_log10_neg_mean_absolute_error, fill=cytokine)) 
+    + geom_bar(stat="identity", position=position_dodge()) 
+    + geom_errorbar(aes(ymin=mean_log10_neg_mean_absolute_error-sd_log10_neg_mean_absolute_error, ymax=mean_log10_neg_mean_absolute_error+sd_log10_neg_mean_absolute_error), width=.2, position=position_dodge(.9)) 
+    + labs(x="Data Split", y="log10_neg_mean_absolute_error") 
     + theme_bw()
     + theme(axis.text.x = element_text(angle = 90, hjust = 1))
     + facet_wrap(data_split	 ~ shuffle, ncol=1)
@@ -297,10 +297,10 @@ for ( i in 1:length(unique(agg_df$cytokine))){
     # split the mean_log10_neg_mean_absolute_error column into two columns
 
     tmp_plot <- (
-        ggplot(tmp_df, aes(x=data_split, y=mean, fill=shuffle))
-            + geom_bar(stat="identity", position=position_dodge())
-            + geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), width=.2, position=position_dodge(.9))
-            + labs(x="Data Split", y="log10_neg_mean_absolute_error")
+        ggplot(tmp_df, aes(x=data_split, y=mean, fill=shuffle)) 
+            + geom_bar(stat="identity", position=position_dodge()) 
+            + geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), width=.2, position=position_dodge(.9)) 
+            + labs(x="Data Split", y="log10_neg_mean_absolute_error") 
             + ggtitle(unique(agg_df$cytokine)[i])
             + theme_bw()
             + theme(
@@ -344,8 +344,8 @@ for (df_type in (list_of_data_frames)){
             well = cytokine_df$well,
             plate = 384)
             + ggtitle(title)
-            + theme_dark()
-            + ggplot2::geom_point(aes(shape = cytokine_df$data_split))
+            + theme_dark() 
+            + ggplot2::geom_point(aes(shape = cytokine_df$data_split)) 
             )
             plot(platemap_plot)
     }
@@ -360,8 +360,8 @@ platemap_plot <- (
         data = df$treatment,
         well = df$well,
         plate = 384)
-    + ggtitle("Selected Treatment Platemap")
-    + theme_dark()
+    + ggtitle("Selected Treatment Platemap") 
+    + theme_dark() 
 )
 ggsave(treatment_well_platemap, platemap_plot, width=12, height=8, dpi=500)
 platemap_plot
@@ -375,7 +375,7 @@ platemap_df$cell_type[platemap_df$cell_type == ""] <- "blank"
 # if treatment is blank, set it to "blank"
 platemap_df$inducer1[platemap_df$inducer1 == ""] <- "blank"
 
-# plot size
+# plot size 
 options(repr.plot.width=8, repr.plot.height=8)
 # platemap of experimental contitions (cell type and inducer)
 cell_type_well_platemap <- file.path(paste0(enet_cp_fig_path,"cell_type_well_platemap.png"))
@@ -389,7 +389,7 @@ platemap_plot <- (
         data = platemap_df$cell_type,
         well = platemap_df$well_id,
         plate = 384)
-    + theme_dark()
+    + theme_dark() 
 )
 ggsave(cell_type_well_platemap, platemap_plot, width=5, height=5, dpi=500)
 platemap_plot
@@ -406,8 +406,8 @@ platemap_plot <- (
         data = platemap_df$inducer1,
         well = platemap_df$well_id,
         plate = 384)
-    + theme_dark()
-    + ggplot2::geom_point(aes(shape = platemap_df$cell_type))
+    + theme_dark() 
+    + ggplot2::geom_point(aes(shape = platemap_df$cell_type)) 
 )
 ggsave(inducer_well_platemap, platemap_plot, width=8, height=8, dpi=500)
 platemap_plot

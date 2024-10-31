@@ -9,7 +9,9 @@
 #SBATCH --output=sample_parent-%j.out
 
 # 32 channel combination * 2 cell types * 2 shuffles * 187 cytokines = 23936
-
+module purge
+module load conda
+conda init bash
 conda activate Interstellar_python
 
 # get the array of cytokiens
