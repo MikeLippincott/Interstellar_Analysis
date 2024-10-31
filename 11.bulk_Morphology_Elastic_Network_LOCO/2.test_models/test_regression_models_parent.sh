@@ -30,6 +30,13 @@ jupyter nbconvert --to=script --FilesWriter.build_directory=./scripts/ ./noteboo
 shuffles=( True False )
 cell_types=( SHSY5Y PBMC )
 
+# subet the arrays for testing
+cytokine_array=("${cytokine_array[@]:0:2}")
+feature_combination_keys=("${feature_combination_keys[@]:0:1}")
+shuffles=( "${shuffles[@]:0:1}" )
+cell_types=( "${cell_types[@]:0:1}" )
+
+
 jobs_submitted_counter=0
 
 # make a file to store the job ids
