@@ -2,14 +2,14 @@
 # This script is used to train the regression models for the elastic network
 
 #SBATCH --nodes=1
-#SBATCH --mem=500M
+#SBATCH --ntasks=1
 #SBATCH --partition=amilan
 #SBATCH --qos=normal
-#SBATCH --time=1:00
+#SBATCH --time=10:00
 #SBATCH --output=sample_test-%j.out
 
 # 32 channel combination * 2 cell types * 2 shuffles * 187 cytokines = 23936
-
+module load anaconda
 conda activate Interstellar_python
 
 cell_type=$1

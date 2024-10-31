@@ -25,36 +25,36 @@ from sklearn.utils import parallel_backend
 # In[2]:
 
 
-argparser = argparse.ArgumentParser()
-argparser.add_argument("--cell_type", type=str, default="all")
-argparser.add_argument("--shuffle", type=str, default=False)
-argparser.add_argument("--cytokine", type=str, default="cytokine")
-argparser.add_argument("--feature_combinations_key", type=str, default="all")
+# argparser = argparse.ArgumentParser()
+# argparser.add_argument("--cell_type", type=str, default="all")
+# argparser.add_argument("--shuffle", type=str, default=False)
+# argparser.add_argument("--cytokine", type=str, default="cytokine")
+# argparser.add_argument("--feature_combinations_key", type=str, default="all")
 
-args = argparser.parse_args()
+# args = argparser.parse_args()
 
-cell_type = args.cell_type
-shuffle = args.shuffle
-cytokine = args.cytokine
-feature_combinations_key = args.feature_combinations_key
+# cell_type = args.cell_type
+# shuffle = args.shuffle
+# cytokine = args.cytokine
+# feature_combinations_key = args.feature_combinations_key
 
 
-# cell_type = "PBMC"
-# cytokine = "IL-1 beta [NSU]"
-# shuffle = "False"
-# feature_combinations_key = "CorrDNA"
+cell_type = "PBMC"
+cytokine = "IL-1 beta [NSU]"
+shuffle = "False"
+feature_combinations_key = "CorrDNA"
 
-if shuffle == "True":
-    shuffle = True
-elif shuffle == "False":
-    shuffle = False
-else:
-    raise ValueError("shuffle must be True or False")
+# if shuffle == "True":
+#     shuffle = True
+# elif shuffle == "False":
+#     shuffle = False
+# else:
+#     raise ValueError("shuffle must be True or False")
 
-print(f"cell_type: {cell_type}")
-print(f"cytokine: {cytokine}")
-print(f"shuffle: {shuffle}")
-print(f"feature_combinations_key: {feature_combinations_key}")
+# print(f"cell_type: {cell_type}")
+# print(f"cytokine: {cytokine}")
+# print(f"shuffle: {shuffle}")
+# print(f"feature_combinations_key: {feature_combinations_key}")
 
 
 # In[3]:
@@ -286,15 +286,18 @@ var_df = results_df.drop(
     ]
 )
 # calculate the variance of the actual and predicted values per cytokine
-var_df = var_df.groupby(["cytokine", "data_split", "shuffle"]).var()
+var_df = var_df.groupby(
+    ["cytokine", "data_split", "shuffle", "channel_feature_combinations_key"]
+).var()
 var_df = pd.merge(
     var_df,
-    results_df.groupby(["cytokine", "data_split", "shuffle"]).r2.unique(),
+    results_df.groupby(
+        ["cytokine", "data_split", "shuffle", "channel_feature_combinations_key"]
+    ).r2.unique(),
     left_index=True,
     right_index=True,
 )
 var_df.reset_index(inplace=True)
-var_df["channel_feature_combinations_key"] = feature_combinations_key
 var_df.head()
 
 

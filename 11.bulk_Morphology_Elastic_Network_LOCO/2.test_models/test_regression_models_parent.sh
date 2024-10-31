@@ -10,8 +10,7 @@
 
 # 32 channel combination * 2 cell types * 2 shuffles * 187 cytokines = 23936
 module purge
-module load conda
-conda init bash
+module load anaconda
 conda activate Interstellar_python
 
 # get the array of cytokiens
@@ -29,13 +28,6 @@ jupyter nbconvert --to=script --FilesWriter.build_directory=./scripts/ ./noteboo
 
 shuffles=( True False )
 cell_types=( SHSY5Y PBMC )
-
-# subet the arrays for testing
-cytokine_array=("${cytokine_array[@]:0:2}")
-feature_combination_keys=("${feature_combination_keys[@]:0:1}")
-shuffles=( "${shuffles[@]:0:1}" )
-cell_types=( "${cell_types[@]:0:1}" )
-
 
 jobs_submitted_counter=0
 
@@ -75,4 +67,5 @@ echo "Array complete"
 
 # end this job once reaching this point
 exit 0
+
 
