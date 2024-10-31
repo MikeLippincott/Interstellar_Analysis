@@ -257,6 +257,7 @@ df["cytokine"] = df["cytokine"].replace(" ", "_", regex=True)
 
 # concat the dataframes
 results_df = pd.concat([results_df, df], axis=0)
+results_df["channel_feature_combinations_key"] = feature_combinations_key
 
 
 # In[15]:
@@ -290,6 +291,7 @@ var_df = pd.merge(
     right_index=True,
 )
 var_df.reset_index(inplace=True)
+var_df["channel_feature_combinations_key"] = feature_combinations_key
 var_df.head()
 
 

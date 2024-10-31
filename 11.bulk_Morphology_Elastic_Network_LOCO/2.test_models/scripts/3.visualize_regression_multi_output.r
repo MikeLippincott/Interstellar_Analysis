@@ -33,6 +33,8 @@ if (!file.exists(dirname(enet_cp_fig_path))) {
 print(unique(df$shuffle))
 print(length(unique(df$cytokine)))
 
+head(df)
+
 options(repr.plot.width=6, repr.plot.height=5)
 # set output path
 global_prediction_trend_path <- file.path(paste0(enet_cp_fig_path,"global_prediction_trend.png"))
