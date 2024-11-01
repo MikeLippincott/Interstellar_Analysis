@@ -8,7 +8,7 @@
 #SBATCH --time=24:00:00
 #SBATCH --output=sample_parent-%j.out
 
-# 32 channel combination * 2 cell types * 2 shuffles * 187 cytokines = 23936
+# 32 channel combination * 2 cell types * 2 shuffles * 187 cytokines * 2 data splits = 59,680 jobs
 module purge
 module load anaconda
 conda activate Interstellar_python
@@ -28,6 +28,7 @@ jupyter nbconvert --to=script --FilesWriter.build_directory=./scripts/ ./noteboo
 
 shuffles=( True False )
 cell_types=( SHSY5Y PBMC )
+data_splits=( train test )
 
 jobs_submitted_counter=0
 
@@ -42,20 +43,20 @@ do
         do
             for cytokine in "${cytokine_array[@]}"
             do
+                for data_split in "${data_splits[@]}"
+                do
 
-                # get the number of jobs for the user
-                number_of_jobs=$(squeue -u $USER | wc -l)
-                while [ $number_of_jobs -gt 990 ]; do
-                    sleep 1s
+                    # get the number of jobs for the user
                     number_of_jobs=$(squeue -u $USER | wc -l)
-                done
+                    while [ $number_of_jobs -gt 990 ]; do
+                        sleep 1s
+                        number_of_jobs=$(squeue -u $USER | wc -l)
+                    done
 
-                job_id=$(sbatch test_regression_models_child.sh "$cell_type" "$shuffle" "$feature_combination" "$cytokine")
-		        echo "$cell_type $shuffle $feature_combination '${cytokine}'"
-                # append the job id to the file
-                job_id=$(echo $job_id | awk '{print $4}')
-                echo " '$job_id' '$cell_type' '$shuffle' '$feature_combination' '$cytokine'" >> job_ids.txt
-	        let jobs_submitted_counter++
+                    sbatch test_regression_models_child.sh "$cell_type" "$shuffle" "$feature_combination" "$cytokine" "$data_split"
+                    echo "$cell_type $shuffle $feature_combination '${cytokine}' $data_split"
+                let jobs_submitted_counter++
+                done
 	        done
         done
     done

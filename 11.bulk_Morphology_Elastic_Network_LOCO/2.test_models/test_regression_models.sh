@@ -21,6 +21,7 @@ cd scripts || exit
 
 shuffles=( True False )
 cell_types=( SHSY5Y PBMC )
+data_splits=( train test )
 
 for cell_type in "${cell_types[@]}"
 do
@@ -30,9 +31,12 @@ do
         do
             for cytokine in "${cytokine_array[@]}"
             do
-		        echo "$cell_type $shuffle $feature_combination '${cytokine}'"
-                python 1.test_regression_multi_output.py --cell_type "$cell_type" --shuffle "$shuffle" --feature_combinations_key "$feature_combination" --cytokine "${cytokine}"
-	    done
+                for data_split in "${data_splits[@]}"
+                do
+    		        echo "$cell_type $shuffle $feature_combination '${cytokine}'"
+                    python 1.test_regression_multi_output.py --cell_type "$cell_type" --shuffle "$shuffle" --feature_combinations_key "$feature_combination" --cytokine "${cytokine}" --data_split "$data_split"
+                done
+            done
         done
     done
 done

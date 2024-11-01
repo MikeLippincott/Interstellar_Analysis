@@ -16,12 +16,13 @@ cell_type=$1
 shuffle=$2
 feature_combinations_key=$3
 cytokine=$4
+data_split=$5
 
 echo "$cell_type $shuffle $feature_combinations_key $cytokine"
 
 cd scripts/ || exit
 
-python 1.test_regression_multi_output.py --cell_type "$cell_type" --shuffle "$shuffle" --cytokine "$cytokine" --feature_combinations_key "$feature_combinations_key"
+python 1.test_regression_multi_output.py --cell_type "$cell_type" --shuffle "$shuffle" --cytokine "$cytokine" --feature_combinations_key "$feature_combinations_key" --data_split "$data_split"
 
 cd ../
 
