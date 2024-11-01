@@ -9,17 +9,15 @@ import pathlib
 
 import pandas as pd
 
-
 # In[2]:
 
 
-# argparser = argparse.ArgumentParser()
-# argparser.add_argument("--cell_type", type=str, default="cell_type")
+argparser = argparse.ArgumentParser()
+argparser.add_argument("--cell_type", type=str, default="cell_type")
 
-# args = argparser.parse_args()
+args = argparser.parse_args()
 
-# cell_type = args.cell_type
-cell_type = "PBMC"
+cell_type = args.cell_type
 
 
 # In[3]:
@@ -66,4 +64,3 @@ variance_r2_stats_df.to_csv(variance_r2_stats_final_output_path, index=False)
 
 
 print("Completed!")
-
