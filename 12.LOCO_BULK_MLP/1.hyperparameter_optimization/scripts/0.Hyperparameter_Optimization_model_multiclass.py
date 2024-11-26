@@ -43,7 +43,7 @@ from sklearn.model_selection import train_test_split
 
 from utils import df_stats
 
-# In[2]:
+# In[ ]:
 
 
 # set up the parser
@@ -75,8 +75,20 @@ CELL_TYPE = args.cell_type
 MODEL_NAME = args.model_name
 channel_combination_key = args.channel_combination_key
 
+# CELL_TYPE = "SHSY5Y"
+# MODEL_NAME = "MLP"
+# channel_combination_key = "All_channels"
+
 
 # In[3]:
+
+
+print(
+    f"CELL_TYPE: {CELL_TYPE}, MODEL_NAME: {MODEL_NAME}, channel_combination_key: {channel_combination_key}"
+)
+
+
+# In[4]:
 
 
 # load in the channel combinations file
@@ -87,7 +99,7 @@ channel_combinations = toml.load(channel_combinations_file_path)
 channel_combinations = channel_combinations[channel_combination_key]
 
 
-# In[4]:
+# In[5]:
 
 
 ml_configs_file = pathlib.Path(MLP_path / "multi_class_config.toml").resolve(
@@ -95,16 +107,16 @@ ml_configs_file = pathlib.Path(MLP_path / "multi_class_config.toml").resolve(
 )
 ml_configs = toml.load(ml_configs_file)
 params = Parameters()
-mlp_params = parameter_set(params, ml_configs, "Bulk_Leave_One_Channel_Out_Params")
+mlp_params = parameter_set(params, ml_configs)
 
 # overwrite params via command line arguments from papermill
 mlp_params.CELL_TYPE = CELL_TYPE
 mlp_params.MODEL_NAME = f"{MODEL_NAME}_{channel_combination_key}"
 MODEL_TYPE = mlp_params.MODEL_TYPE
-HYPERPARAMETER_BATCH_SIZE = mlp_params.HYPERPARAMETER_BATCH_SIZE
+HYPERPARAMETER_BATCH_SIZE = 2
 
 
-# In[5]:
+# In[6]:
 
 
 # Import Data
@@ -118,31 +130,27 @@ df1 = pd.read_parquet(file_path, columns=channel_combinations)
 print(df1.shape)
 
 
-# In[6]:
+# In[7]:
 
 
 # get paths for toml files
 ground_truth_file_path = pathlib.Path(MLP_path / "ground_truth.toml").resolve(
     strict=True
 )
-treatment_splits_file_path = pathlib.Path(MLP_path / "splits.toml").resolve(strict=True)
 # read toml files
 ground_truth = toml.load(ground_truth_file_path)
-treatment_splits = toml.load(treatment_splits_file_path)
 
 
-# In[7]:
+# In[8]:
 
 
 # get information from toml files
 apoptosis_groups_list = ground_truth["Apoptosis"]["apoptosis_groups_list"]
 pyroptosis_groups_list = ground_truth["Pyroptosis"]["pyroptosis_groups_list"]
 healthy_groups_list = ground_truth["Healthy"]["healthy_groups_list"]
-test_split_100 = treatment_splits["splits"]["data_splits_100"]
-test_split_75 = treatment_splits["splits"]["data_splits_75"]
 
 
-# In[8]:
+# In[9]:
 
 
 np.random.seed(0)
@@ -158,7 +166,7 @@ else:
     print("Data Subset Is Off")
 
 
-# In[9]:
+# In[10]:
 
 
 # add apoptosis, pyroptosis and healthy columns to dataframe
@@ -187,10 +195,12 @@ df1.drop(columns=["apoptosis", "pyroptosis", "healthy"], inplace=True)
 
 # ### Split said data
 
-# In[10]:
+# In[11]:
 
 
-index_path = pathlib.Path(f"../../0.data_splits/indexes/{CELL_TYPE}/multi_class/")
+index_path = pathlib.Path(
+    f"../../0.data_splits/indexes/{params.CELL_TYPE}/multi_class/"
+)
 
 
 # save indexes as tsv file
@@ -203,14 +213,12 @@ indexes = pd.read_csv(index_data_path, sep="\t")
 training_data_set_index = indexes.loc[
     indexes["label"] == "train", "labeled_data_index"
 ].values
-val_data_set_index = indexes.loc[indexes["label"] == "val", "labeled_data_index"].values
+validation_data_set_index = indexes.loc[
+    indexes["label"] == "val", "labeled_data_index"
+].values
 testing_data_set_index = indexes.loc[
     indexes["label"] == "test", "labeled_data_index"
 ].values
-treatment_holdout_index = indexes.loc[
-    indexes["label"] == "treatment_holdout", "labeled_data_index"
-].values
-holdout_index = indexes.loc[indexes["label"] == "holdout", "labeled_data_index"].values
 
 
 # #### Set up Data to be compatible with model
@@ -218,7 +226,7 @@ holdout_index = indexes.loc[indexes["label"] == "holdout", "labeled_data_index"]
 # ##### Classification Models:
 # Comment out code if using regression
 
-# In[11]:
+# In[12]:
 
 
 # Code snippet for metadata extraction by Jenna Tomkinson
@@ -229,7 +237,7 @@ df_descriptive = df1[df_metadata]
 df_values = df1.drop(columns=df_metadata)
 
 
-# In[12]:
+# In[13]:
 
 
 # get weights
@@ -243,7 +251,7 @@ with open(class_weights_file, "r") as file:
 class_weights
 
 
-# In[13]:
+# In[14]:
 
 
 # Creating label encoder
@@ -272,7 +280,7 @@ df_values_Y.head()
 df_values_Y.unique()
 
 
-# In[14]:
+# In[15]:
 
 
 # replace the class weights key with the encoder key's matching value
@@ -283,32 +291,33 @@ class_weights
 
 # #### Split Data - All Models can proceed through this point
 
-# In[15]:
+# In[16]:
 
 
 # split into train and test sets from indexes previously defined
 
 X_train = df_values_X.loc[training_data_set_index]
-X_val = df_values_X.loc[val_data_set_index]
+X_val = df_values_X.loc[validation_data_set_index]
 X_test = df_values_X.loc[testing_data_set_index]
-X_holdout = df_values_X.loc[holdout_index]
-X_treatment_holdout = df_values_X.loc[treatment_holdout_index]
 
 Y_train = df_values_Y.loc[training_data_set_index]
-Y_val = df_values_Y.loc[val_data_set_index]
+Y_val = df_values_Y.loc[validation_data_set_index]
 Y_test = df_values_Y.loc[testing_data_set_index]
-Y_holdout = df_values_Y.loc[holdout_index]
-Y_treatment_holdout = df_values_Y.loc[treatment_holdout_index]
 
 
-# In[16]:
+print(
+    X_train.shape, X_val.shape, X_test.shape, Y_train.shape, Y_val.shape, Y_test.shape
+)
+
+
+# In[17]:
 
 
 mlp_params.OUT_FEATURES = len(df_values_Y.unique())
 mlp_params.OUT_FEATURES
 
 
-# In[17]:
+# In[18]:
 
 
 Y_train = torch.tensor(Y_train.values)
@@ -316,42 +325,32 @@ Y_train = torch.nn.functional.one_hot(
     Y_train, num_classes=mlp_params.OUT_FEATURES
 ).float()
 
-Y_val = torch.tensor(Y_val.values)
-Y_val = torch.nn.functional.one_hot(Y_val, num_classes=mlp_params.OUT_FEATURES).float()
 
 Y_test = torch.tensor(Y_test.values)
 Y_test = torch.nn.functional.one_hot(
     Y_test, num_classes=mlp_params.OUT_FEATURES
 ).float()
 
-Y_holdout = torch.tensor(Y_holdout.values)
-Y_holdout = torch.nn.functional.one_hot(
-    Y_holdout, num_classes=mlp_params.OUT_FEATURES
-).float()
-
-Y_treatment_holdout = torch.tensor(Y_treatment_holdout.values)
-Y_treatment_holdout = torch.nn.functional.one_hot(
-    Y_treatment_holdout, num_classes=mlp_params.OUT_FEATURES
-).float()
 
 # convert the X dataframes to tensors
 X_train = torch.tensor(X_train.values)
-X_val = torch.tensor(X_val.values)
 X_test = torch.tensor(X_test.values)
-X_holdout = torch.tensor(X_holdout.values)
-X_treatment_holdout = torch.tensor(X_treatment_holdout.values)
+
+X_val = torch.tensor(X_val.values)
+Y_val = torch.tensor(Y_val.values)
+Y_val = torch.nn.functional.one_hot(Y_val, num_classes=mlp_params.OUT_FEATURES).float()
 
 
-# In[18]:
+# In[19]:
 
 
 # produce data objects for train, val and test datasets
 train_data = torch.utils.data.TensorDataset(X_train, Y_train)
-val_data = torch.utils.data.TensorDataset(X_val, Y_val)
 test_data = torch.utils.data.TensorDataset(X_test, Y_test)
+val_data = torch.utils.data.TensorDataset(X_val, Y_val)
 
 
-# In[19]:
+# In[20]:
 
 
 mlp_params.IN_FEATURES = X_train.shape[1]
@@ -375,7 +374,7 @@ else:
 print(mlp_params.MODEL_TYPE)
 
 
-# In[20]:
+# In[21]:
 
 
 # convert data class into a dataloader to be compatible with pytorch
@@ -383,24 +382,24 @@ train_loader = torch.utils.data.DataLoader(
     dataset=train_data, batch_size=mlp_params.HYPERPARAMETER_BATCH_SIZE, shuffle=True
 )
 valid_loader = torch.utils.data.DataLoader(
-    dataset=val_data, batch_size=mlp_params.HYPERPARAMETER_BATCH_SIZE, shuffle=False
+    dataset=val_data, batch_size=mlp_params.HYPERPARAMETER_BATCH_SIZE, shuffle=True
 )
 
 
-# In[21]:
+# In[22]:
 
 
 mlp_params.OUT_FEATURES
 
 
-# In[22]:
+# In[23]:
 
 
 # check device
 print(mlp_params.DEVICE)
 
 
-# In[23]:
+# In[24]:
 
 
 # no accuracy function must be loss for regression
@@ -438,7 +437,7 @@ objective_model_optimizer(
 )
 
 
-# In[24]:
+# In[25]:
 
 
 # create graph directory for this model
@@ -455,7 +454,7 @@ graph_path = f"{graph_path}/plot_optimization_history_graph"
 fig.write_image(pathlib.Path(f"{graph_path}.png"))
 
 
-# In[25]:
+# In[26]:
 
 
 # create graph directory for this model
@@ -471,7 +470,7 @@ graph_path = f"{graph_path}/plot_intermediate_values_graph"
 fig.write_image(pathlib.Path(f"{graph_path}.png"))
 
 
-# In[26]:
+# In[27]:
 
 
 param_dict = extract_best_trial_params(

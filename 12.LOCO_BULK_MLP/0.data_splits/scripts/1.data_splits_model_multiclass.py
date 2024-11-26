@@ -43,7 +43,7 @@ from sklearn.model_selection import train_test_split
 
 from utils import df_stats
 
-# In[2]:
+# In[ ]:
 
 
 # set up the parser
@@ -66,6 +66,9 @@ args = parser.parse_args()
 
 CELL_TYPE = args.cell_type
 MODEL_NAME = args.model_name
+
+# CELL_TYPE = "SHSY5Y"
+# MODEL_NAME = "MLP"
 
 
 # In[3]:
@@ -105,10 +108,8 @@ df1 = pd.read_parquet(file_path)
 ground_truth_file_path = pathlib.Path(MLP_path / "ground_truth.toml").resolve(
     strict=True
 )
-treatment_splits_file_path = pathlib.Path(MLP_path / "splits.toml").resolve(strict=True)
 # read toml files
 ground_truth = toml.load(ground_truth_file_path)
-treatment_splits = toml.load(treatment_splits_file_path)
 
 
 # In[6]:
@@ -118,8 +119,6 @@ treatment_splits = toml.load(treatment_splits_file_path)
 apoptosis_groups_list = ground_truth["Apoptosis"]["apoptosis_groups_list"]
 pyroptosis_groups_list = ground_truth["Pyroptosis"]["pyroptosis_groups_list"]
 healthy_groups_list = ground_truth["Healthy"]["healthy_groups_list"]
-test_split_100 = treatment_splits["splits"]["data_splits_100"]
-test_split_75 = treatment_splits["splits"]["data_splits_75"]
 
 
 # In[7]:
@@ -178,54 +177,32 @@ wells_to_hold = (
     .agg(np.random.choice)["Metadata_Well"]
     .to_list()
 )
-df_holdout = df1[df1["Metadata_Well"].isin(wells_to_hold)]
-df = df1[~df1["Metadata_Well"].isin(wells_to_hold)]
+df_test = df1[df1["Metadata_Well"].isin(wells_to_hold)]
+df_train = df1[~df1["Metadata_Well"].isin(wells_to_hold)]
 
 
-print("Wells held out for testing:", df_holdout["Metadata_Well"].unique())
-print(
-    "Wells to use for training, validation, and testing", df1["Metadata_Well"].unique()
-)
-print(df_holdout.shape, df.shape)
+print("Wells held out for testing:", df_test["Metadata_Well"].unique())
+print("Wells to use for training and validation", df1["Metadata_Well"].unique())
+print(df_test.shape, df_train.shape)
 
 
 # In[10]:
 
 
-# variable test and train set splits
-# 100% test set
-# subset the following treatments for test set
-treatment_holdout = df[
-    df["oneb_Metadata_Treatment_Dose_Inhibitor_Dose"].isin(test_split_100)
-]
-df = df[~df["oneb_Metadata_Treatment_Dose_Inhibitor_Dose"].isin(test_split_100)]
-print(treatment_holdout.shape, df.shape)
+df_train, df_val = train_test_split(
+    df_train, test_size=0.2, random_state=0, stratify=df_train["labels"]
+)
 
 
 # In[11]:
 
 
-training_data_set, testing_data_set = train_test_split(
-    df,
-    test_size=0.20,
-    stratify=df["labels"],
-)
-
-print(training_data_set.shape, testing_data_set.shape)
-
-training_data_set, val_data_set = train_test_split(
-    training_data_set,
-    test_size=0.20,
-    stratify=training_data_set["labels"],
-)
 print(
     f"""
-    Testing set length: {len(testing_data_set)}\n
-    Training set length: {len(training_data_set)}\n
-    Validation set length: {len(val_data_set)}\n
-    Treatment Holdout set length: {len(treatment_holdout)}\n
-    Holdout set length: {len(df_holdout)}
-    Added set length: {len(testing_data_set) + len(training_data_set) + len(val_data_set) + len(treatment_holdout) + len(df_holdout)}
+    Testing set length: {len(df_test)}\n
+    Training set length: {len(df_train)}\n
+    Validation set length: {len(df_val)}\n
+    Added set length: {len(df_test) + len(df_train)}
     Total actual set length: {len(df1)}
 """
 )
@@ -236,15 +213,14 @@ print(
 
 # get the indexes for the training and testing sets
 
-training_data_set_index = training_data_set.index
-val_data_set_index = val_data_set.index
-testing_data_set_index = testing_data_set.index
-treatment_holdout_index = treatment_holdout.index
-df_holdout_index = df_holdout.index
+training_data_set_index = df_train.index
+testing_data_set_index = df_test.index
+validation_data_set_index = df_val.index
 
-assert len(training_data_set_index) + len(val_data_set_index) + len(
+
+assert len(training_data_set_index) + len(validation_data_set_index) + len(
     testing_data_set_index
-) + len(treatment_holdout_index) + len(df_holdout_index) == len(df1)
+) == len(df1)
 
 
 # In[13]:
@@ -252,17 +228,13 @@ assert len(training_data_set_index) + len(val_data_set_index) + len(
 
 print(
     training_data_set_index.shape,
-    val_data_set_index.shape,
+    validation_data_set_index.shape,
     testing_data_set_index.shape,
-    treatment_holdout_index.shape,
-    df_holdout_index.shape,
 )
 print(
     training_data_set_index.shape[0]
-    + val_data_set_index.shape[0]
+    + validation_data_set_index.shape[0]
     + testing_data_set_index.shape[0]
-    + treatment_holdout_index.shape[0]
-    + df_holdout_index.shape[0]
 )
 
 
@@ -273,14 +245,12 @@ print(
 index_data = []
 for index in training_data_set_index:
     index_data.append({"labeled_data_index": index, "label": "train"})
-for index in val_data_set_index:
-    index_data.append({"labeled_data_index": index, "label": "val"})
+
 for index in testing_data_set_index:
     index_data.append({"labeled_data_index": index, "label": "test"})
-for index in treatment_holdout_index:
-    index_data.append({"labeled_data_index": index, "label": "treatment_holdout"})
-for index in df_holdout_index:
-    index_data.append({"labeled_data_index": index, "label": "holdout"})
+for index in validation_data_set_index:
+    index_data.append({"labeled_data_index": index, "label": "val"})
+
 
 # make index data a dataframe and sort it by labeled data index
 index_data = pd.DataFrame(index_data)
